@@ -42,6 +42,9 @@ async def handle_voice(message: Message):
 
     :param message: Telegram message object containing a voice message
     """
+    # Notify the user that processing has started
+    processing_msg = await message.answer("File received, processing...")
+
     voice = await bot.get_file(message.voice.file_id)
     file_path = os.path.join(AUDIO_DIR, f"{voice.file_id}.ogg")
     wav_path = os.path.join(AUDIO_DIR, f"{voice.file_id}.wav")
@@ -50,33 +53,9 @@ async def handle_voice(message: Message):
     logger.info(f"Downloaded voice message from user {message.from_user.id}: {file_path}")
 
     text = transcribe_audio(file_path)
-    await message.answer(text)
 
-    # Safe file deletion
-    for path in [file_path, wav_path]:
-        if os.path.exists(path):
-            try:
-                os.remove(path)
-                logger.info(f"Deleted file: {path}")
-            except Exception as e:
-                logger.error(f"Error deleting {path}: {e}")
-
-@dp.message(lambda message: message.audio)
-async def handle_audio(message: Message):
-    """
-    Handles audio files, downloads them, transcribes, and sends back the text.
-
-    :param message: Telegram message object containing an audio file
-    """
-    audio = await bot.get_file(message.audio.file_id)
-    file_path = os.path.join(AUDIO_DIR, f"{audio.file_id}.ogg")
-    wav_path = os.path.join(AUDIO_DIR, f"{audio.file_id}.wav")
-
-    await bot.download_file(audio.file_path, file_path)
-    logger.info(f"Downloaded audio file from user {message.from_user.id}: {file_path}")
-
-    text = transcribe_audio(file_path)
-    await message.answer(text)
+    # Edit the initial message with the final transcription result
+    await processing_msg.edit_text(text)
 
     # Safe file deletion
     for path in [file_path, wav_path]:
