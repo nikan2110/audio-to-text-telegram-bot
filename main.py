@@ -42,7 +42,6 @@ async def handle_voice(message: Message):
 
     :param message: Telegram message object containing a voice message
     """
-    # Notify the user that processing has started
     processing_msg = await message.answer("File received, processing...")
 
     voice = await bot.get_file(message.voice.file_id)
@@ -54,10 +53,8 @@ async def handle_voice(message: Message):
 
     text = transcribe_audio(file_path)
 
-    # Edit the initial message with the final transcription result
     await processing_msg.edit_text(text)
 
-    # Safe file deletion
     for path in [file_path, wav_path]:
         if os.path.exists(path):
             try:
